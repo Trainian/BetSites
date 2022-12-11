@@ -6,11 +6,14 @@ namespace ApplicationCore.Models
     public class Coefficient : BaseObject
     {
         public DateTime Time { get; set; }
-        public double Ratio { get; set; }
-        public Dictionary<DateTime, int> History { get; set; } = new Dictionary<DateTime, int>();
+        public double RatioFirst { get; set; }
+        public double RatioSecond { get; set; }
+        public double RatioThird { get; set; }
+        public TimeSpan BetTime { get; set; }
+        public string Score { get; set; }
         public int BetId { get; set; }
 
 
-        public Bet Bet { get; set; }
+        public virtual Bet Bet { get; set; }
     }
 }

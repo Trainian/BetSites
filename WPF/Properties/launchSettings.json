@@ -2,7 +2,9 @@
   "profiles": {
     "WPF": {
       "commandName": "Project",
-      "jsWebView2Debugging": false
+      "jsWebView2Debugging": false,
+      "sqlDebugging": true,
+      "nativeDebugging": false
     }
   }
 }

@@ -11,26 +11,58 @@ using System.Threading.Tasks;
 using WPF.Static;
 using OpenQA.Selenium.Support.UI;
 using System.Windows.Controls;
+using Infrastructure.Data;
+using ApplicationCore.Repositories;
+using WPF.Interfaces;
+using System.Windows.Threading;
+using Microsoft.Extensions.DependencyInjection;
+using WPF.Services;
+using System.Windows;
+using ApplicationCore.Models;
+using System.Diagnostics;
+using System.Threading;
 
 namespace WPF.Parsers
 {
     public class FonBetParser : IBaseParser
     {
-        public TextBox? Information { get; set; }
-        public async Task Run()
+        private IServiceProvider _services;
+        private IBetService _betservice;
+
+        public FonBetParser()
         {
+
+        }
+
+        public async Task Run(CancellationToken token, int scrolls = 0)
+        {
+            int curScroll = 0;
             var curDer = Directory.GetCurrentDirectory();
             IWebDriver driver = new ChromeDriver(curDer);
-            var waiter = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+            driver.Manage().Timeouts().ImplicitWait = new TimeSpan(0, 0, 3);
+            var waiter = new WebDriverWait(driver, TimeSpan.FromSeconds(1));
+            waiter.IgnoreExceptionTypes(typeof(StaleElementReferenceException));
             driver.Navigate().GoToUrl(@"https://www.fon.bet/live/");
-            await Task.Delay(40000);
 
-            var sports = waiter.Until(e => e.FindElements(By.CssSelector(SearchElements.Bet)));
+            do
+            {
+                await ParsSite(driver, waiter);
+                ++curScroll;
 
-            Information?.AppendText(sports[0].Text);
+                if(curScroll < scrolls)
+                {
+                    Scroll(driver, 600);
+                }
+                else
+                {
+                    curScroll = 0;
+                    Scroll(driver, -1000 * scrolls);
+                }
+            } while (!token.IsCancellationRequested);
+            
+            driver.Close();
 
-            var parsModels = new FonBetModelCreater() { Information = this.Information };
-            var el = parsModels.CreateModels(sports[0]);
+            await Task.CompletedTask;
 
             //var ss = listEl[3];
             //foreach (var item in sports)
@@ -42,26 +74,60 @@ namespace WPF.Parsers
             //        break;
             //    }
             //}
-            Console.WriteLine();
         }
+
+        private async Task ParsSite(IWebDriver driver, WebDriverWait waiter)
+        {
+            IReadOnlyCollection<IWebElement> sports = new List<IWebElement>();
+            do
+            {
+                sports = waiter.Until(e => e.FindElements(By.CssSelector(SearchElements.Bet)));
+            }
+            while (sports.Count == 0);
+
+
+            var parsModels = new FonBetModelCreater();
+            foreach (var bet in sports)
+            {
+                try
+                {
+
+                    var name = bet.Text; //bet.FindElement(By.CssSelector(SearchElements.BetName)).Text;
+                    if (name.Contains("—"))
+                    {
+                        parsModels.CreateModels(bet);
+                    }
+
+                }
+                catch (StaleElementReferenceException){ }
+                catch (Exception e)
+                {
+                    MessageBox.Show(e.Message);
+                }
+            }
+            
+        }
+        /// Скроллинг
+        public void Scroll(IWebDriver driver, int scrollAmount)
+        {
+            var scrollElement = driver.FindElement(By.CssSelector(SearchElements.Scroll));
+            var scrollOrigin = new WheelInputDevice.ScrollOrigin
+            {
+                Element = scrollElement,
+                XOffset = 0,
+                YOffset = 0
+            };
+
+            new Actions(driver)
+                .ScrollFromOrigin(scrollOrigin, 0, scrollAmount)
+                .Perform();
+
+            Task.Delay(500);
+        }
+
     }
 }
 
-/// Скроллинг
-//var scrollElement = driver.FindElement(By.CssSelector(SearchElements.Scroll));
-//var scrollOrigin = new WheelInputDevice.ScrollOrigin
-//{
-//    Element = scrollElement,
-//    XOffset = 0,
-//    YOffset = 0
-//};
 
-//new Actions(driver)
-//    .ScrollFromOrigin(scrollOrigin, 0, 500)
-//    .Perform();
 
-//await Task.Delay(1000);
 
-//new Actions(driver)
-//    .ScrollFromOrigin(scrollOrigin, 0, -500)
-//    .Perform();

@@ -1,4 +1,5 @@
 ﻿using ApplicationCore.Models;
+using Microsoft.Extensions.DependencyInjection;
 using OpenQA.Selenium;
 using System;
 using System.Collections.Generic;
@@ -7,35 +8,64 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Automation.Provider;
 using System.Windows.Controls;
+using WPF.Interfaces;
+using WPF.Services;
 using WPF.Static;
+using WPF.Converters;
 
 namespace WPF.Parsers
 {
     public class FonBetModelCreater
     {
-        public TextBox? Information { get; set; }
+        private ServiceProvider _services;
+        private IBetService _betservice;
+
+        public FonBetModelCreater()
+        {
+            _services = ServiceProviderFactory.Get;
+            _betservice = _services.GetService<IBetService>()!;
+        }
         public Bet CreateModels (IWebElement element)
         {
-            var model = new Bet() { Id = 1 };
-            model.AuxiliaryLocator = element.ToString()!;
-            model.Name = element.FindElement(By.CssSelector(SearchElements.BetName)).Text;
-            var betCoefficient = element.FindElements(By.CssSelector(SearchElements.BetCoefficient));
-            var listCoef = new List<Coefficient>();
-            for(int i=0; i < 3; i++)
+            try
             {
-                double number = 0.0;
-                double.TryParse(betCoefficient[i].Text.Trim(), out number);
-                var coef = new Coefficient()
+                var model = new Bet();
+                var listCoef = new List<double>();
+                model.Name = element.FindElement(By.CssSelector(SearchElements.BetName)).Text;
+                model.Score = element.FindElement(By.CssSelector(SearchElements.BetScore)).Text;
+                var time = element.FindElement(By.CssSelector(SearchElements.BetTime)).Text;
+                model.BetTime = new TimeSpan().ConvertToTimeSpan(time);
+                model.AuxiliaryLocator = element.ToString()!;
+
+                var betCoefficient = element.FindElements(By.CssSelector(SearchElements.BetCoefficient));
+                for (int i = 0; i < 3; i++)
                 {
-                    Id = i,
-                    BetId = model.Id,
-                    Time = DateTime.Now,
-                    Ratio = number
+                    var coefString = betCoefficient[i].Text != "-" ? betCoefficient[i].Text.Replace(".", ",") : "0,0";
+                    var coefNumber = double.Parse(coefString);
+                    listCoef.Add(coefNumber);
+                }
+                var coefficient = new Coefficient() 
+                {
+                    RatioFirst = listCoef[0],
+                    RatioSecond = listCoef[1],
+                    RatioThird = listCoef[2],
+                    Score = model.Score,
+                    BetTime = model.BetTime
                 };
-                listCoef.Add(coef);
+                
+                model.Coefficients.Add(coefficient);
+
+                lock (MainWindow.locker)
+                {
+                    _betservice.AddBetAsync(model);
+                }
+
+                return model;
             }
-            model.Coefficients = listCoef;
-            return model;
+            catch
+            {
+                return new Bet();
+            }
         }
     }
 }

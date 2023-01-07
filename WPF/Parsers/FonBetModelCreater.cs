@@ -12,6 +12,7 @@ using WPF.Interfaces;
 using WPF.Services;
 using WPF.Static;
 using WPF.Converters;
+using WPF.Services.Factory;
 
 namespace WPF.Parsers
 {
@@ -54,11 +55,6 @@ namespace WPF.Parsers
                 };
                 
                 model.Coefficients.Add(coefficient);
-
-                lock (MainWindow.locker)
-                {
-                    _betservice.AddBetAsync(model);
-                }
 
                 return model;
             }

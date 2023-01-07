@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -30,6 +31,7 @@ using System.Windows.Threading;
 using WPF.Interfaces;
 using WPF.Parsers;
 using WPF.Services;
+using WPF.Services.Factory;
 using WPF.Static;
 
 namespace WPF
@@ -41,12 +43,17 @@ namespace WPF
     {
         private BetContext _context;
         private CollectionViewSource BetsViewSource;
-        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private ObservableCollection<Bet> Bets = new ObservableCollection<Bet>();
         private CollectionViewSource CoefficientsViewSource;
         private ObservableCollection<Coefficient> Coefficients = new ObservableCollection<Coefficient>();
         private IStatisticService _serviceStatistic;
+        private ISimulateService _serviceSimulate;
+        private ISettingsService _serviceSettings;
+        private CancellationToken _cancellationToken = _cancellationTokenSource.Token;
+        private bool _settingsChanged;
+
         public static object locker = new object();
+        private static CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         public MainWindow(BetContext context)
         {
@@ -56,6 +63,8 @@ namespace WPF
             CoefficientsViewSource = (CollectionViewSource)FindResource(nameof(CoefficientsViewSource));
             var services = ServiceProviderFactory.Get;
             _serviceStatistic = services.GetService<IStatisticService>()!;
+            _serviceSimulate = services.GetService<ISimulateService>()!;
+            _serviceSettings = services.GetService<ISettingsService>()!;
         }
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
@@ -72,6 +81,10 @@ namespace WPF
             BindingOperations.EnableCollectionSynchronization(Coefficients, locker);
 
             BetsViewSource.Source = Bets;
+
+            var user = _serviceSettings.GetSettings();
+            LoginPhone.Text = user.PhoneNumber;
+            LoginPassword.Password = user.Password;
         }
 
         private void Coefficients_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -111,8 +124,12 @@ namespace WPF
         {
             int scrolls;
             var isCount = int.TryParse(Scrolls.Text, out scrolls);
+            var loginPhone = LoginPhone.Text;
+            var loginPassword = LoginPassword.Password;
+            _cancellationTokenSource = new CancellationTokenSource();
+            _cancellationToken = _cancellationTokenSource.Token;
 
-            if(isCount != true)
+            if (isCount != true)
             {
                 MessageBox.Show("Count scrolls most be count");
                 return;
@@ -120,31 +137,49 @@ namespace WPF
 
             try
             {
-                //await Task.Run(async () => await FonBetStart(scrolls),_cancellationTokenSource.Token).ConfigureAwait(false);
-                await FonBetStart(scrolls);
+                await FonBetStart(loginPhone,loginPassword, scrolls);
+            }
+            catch (AggregateException ae)
+            {
+                Debug.WriteLine("Парсинг отменен");
             }
             catch (Exception ex)
             {
-                throw new Exception($"Ошибка интернет соединения.\n{ex.Message}");
+                //throw new Exception($"Ошибка Драйвера.\n{ex.Message}");
             }
         }
 
-
         protected override async void OnClosing(CancelEventArgs e)
         {
-            _cancellationTokenSource.Cancel();
+            // Если изменены настройки, спрашиваем о необходимости сохранения
+            if(_settingsChanged)
+            {
+                var result = MessageBox.Show("Сохранить настройки пользователя?", "Пользователь", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (result == MessageBoxResult.Yes)
+                {
+                    int scrolls;
+                    var settings = _serviceSettings.GetSettings();
+                    settings.PhoneNumber = LoginPhone.Text;
+                    settings.Password = LoginPassword.Password;
+                    if (Int32.TryParse(Scrolls.Text, out scrolls))
+                        settings.Scrolls = scrolls;
+                    _serviceSettings.SetSettings(settings);
+                }
+            }
+
             _cancellationTokenSource.Dispose();
             _context.Dispose();
             base.OnClosing(e);
         }
-        private async Task FonBetStart(int scrolls)
+        private async Task FonBetStart(string loginPhone, string loginPassword, int scrolls)
         {
-            await Task.Run(() => new FonBetParser().Run(_cancellationTokenSource.Token, scrolls)).ConfigureAwait(false);
+            await Task.Run(() => new FonBetParser().Run(_cancellationToken, loginPhone, loginPassword, scrolls), _cancellationToken).ConfigureAwait(false);
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             _cancellationTokenSource.Cancel();
+            _cancellationTokenSource.Dispose();
         }
 
         private async void CalculateStatistic_Click(object sender, RoutedEventArgs e)
@@ -157,6 +192,28 @@ namespace WPF
 
             Win_Percent.Content = await _serviceStatistic.GetPercentWins().ConfigureAwait(false);
             Win_Percent.Content += "%";
+        }
+
+        private async void Simulate_Click(object sender, RoutedEventArgs e)
+        {
+            await Task.Run(async () =>
+            {
+                var simulate = _serviceSimulate.Run(1000, 50);
+                await foreach (var item in simulate)
+                {
+                    Simulate_TextBox.Dispatcher.Invoke(() => Simulate_TextBox.Text += item.ToString() + "\n");
+                }
+            });
+        }
+
+        private void SettingsChanged(object sender, TextChangedEventArgs e)
+        {
+            _settingsChanged = true;
+        }
+
+        private void SettingsChanged(object sender, RoutedEventArgs e)
+        {
+            _settingsChanged = true;
         }
     }
 }

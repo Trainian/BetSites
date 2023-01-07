@@ -49,14 +49,20 @@ namespace WPF.Services
             return await _betRepository.AddAsync(entity);
         }
 
-        public async Task<IEnumerable<Bet>> GetAllBetAsync()
+        public async Task<IEnumerable<Bet>?> GetAllBetAsync()
         {
             return await _betRepository.GetAllAsync();
         }
 
-        public async Task<Bet> GetBetByIdAsync(int id)
+        public async Task<Bet?> GetBetByIdAsync(int id)
         {
             return await _betRepository.GetByIdAsync(id);
+        }
+
+        public async Task<Bet?> GetBetByName(string name)
+        {
+            var bets = await _betRepository.GetAsync(b => b.Name == name);
+            return bets.LastOrDefault();
         }
 
         public async Task<Bet> UpdateBetAsync(Bet entityNew, Bet entityDb)

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using WPF.Interfaces;
 using WPF.Parsers;
 
-namespace WPF.Services
+namespace WPF.Services.Factory
 {
     public static class ServiceProviderFactory
     {
@@ -23,7 +23,8 @@ namespace WPF.Services
         {
             ServiceCollection services = new ServiceCollection();
             ConfigureServices(services);
-            return services.BuildServiceProvider();
+            _serviceProvider = services.BuildServiceProvider();
+            return _serviceProvider;
         }
 
         private static void ConfigureServices(ServiceCollection services)
@@ -37,9 +38,11 @@ namespace WPF.Services
             services.AddScoped(typeof(IBetRepository), typeof(BetRepository));
             services.AddScoped(typeof(ICoefficientRepository), typeof(CoefficientRepository));
             services.AddScoped(typeof(IBetService), typeof(BetService));
-            services.AddScoped(typeof(IStatisticService), typeof(StatisticService));
+            services.AddScoped(typeof(IUserService), typeof(UserService));
+            services.AddScoped(typeof(IDebtService), typeof(FonbetDebtService));
+            services.AddScoped(typeof(ISimulateService), typeof(SimulateService));
 
-            services.AddSingleton<MainWindow>();
+            services.AddTransient<MainWindow>();
         }
     }
 }

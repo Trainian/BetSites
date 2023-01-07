@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,29 +11,36 @@ namespace Infrastructure.Data
 {
     public class BetContext : DbContext
     {
-        public BetContext(DbContextOptions<BetContext> options): base (options)
+        //public BetContext()
+        //{
+        //    Database.EnsureCreated();
+        //    Database.EnsureDeleted();
+        //}
+
+        public BetContext(DbContextOptions<BetContext> options) : base(options)
         {
-            try
-            {
-                //Database.EnsureDeleted();
-                Database.EnsureCreated();
-            }
-            catch (Exception e)
-            {
-            }
+            Debug.WriteLine(options);
+            Database.EnsureDeleted();
+            Database.EnsureCreated();
         }
 
         public DbSet<Bet> Bets { get; set; }
         public DbSet<Coefficient> Coefficients { get; set; }
 
+        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        //{
+        //    optionsBuilder.UseSqlite("Data Source=BetDB.db").UseLazyLoadingProxies().EnableServiceProviderCaching();
+        //    base.OnConfiguring(optionsBuilder);
+        //}
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            var e = modelBuilder.Entity<Bet>();
-            if(modelBuilder.Entity<Bet>() == null)
-            {
-                modelBuilder.Entity<Coefficient>().HasData(GetCoefficients());
-                modelBuilder.Entity<Bet>().HasData(GetBets());
-            }
+            //var e = modelBuilder.Entity<Bet>();
+            //if(modelBuilder.Entity<Bet>() == null)
+            //{
+            //    modelBuilder.Entity<Coefficient>().HasData(GetCoefficients());
+            //    modelBuilder.Entity<Bet>().HasData(GetBets());
+            //}
             base.OnModelCreating(modelBuilder);
         }
 

@@ -16,6 +16,9 @@
     <TabControl FlowDirection="LeftToRight" Padding="2,2,2,2" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" TabStripPlacement="Top" Margin="5,5,5,5">
         <TabItem Header="FonBet" Padding="6,2,6,2">
             <Grid Margin="0,0,0,5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="335"/>
                     <RowDefinition Height="*"/>
@@ -83,12 +86,19 @@
                     </DataGrid.Columns>
                 </DataGrid>
                 <Button Content="Stop pars" HorizontalAlignment="Left" Margin="138,10,0,0" VerticalAlignment="Top" Click="Button_Click"/>
-                <Label Content="Count scrolls" Width="100" Height="25" Margin="563,12,121,298" Visibility="Visible" FontWeight="Normal"/>
-                <TextBox x:Name="Scrolls" HorizontalAlignment="Left" Margin="646,16,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="30" Background="White"/>
+                <Label Content="Count scrolls:" Margin="232,24,466,286" Visibility="Visible" FontWeight="Normal"/>
+                <TextBox x:Name="Scrolls" HorizontalAlignment="Left" Margin="340,28,0,0" TextWrapping="Wrap" Text="1" VerticalAlignment="Top" Width="30" Background="White" TextChanged="SettingsChanged"/>
+                <Label Content="Номер телефона:" HorizontalAlignment="Left" Margin="232,0,0,0" VerticalAlignment="Top"/>
+                <Label Content="Пароль:" HorizontalAlignment="Left" Margin="478,0,0,0" VerticalAlignment="Top" Width="105"/>
+                <TextBox x:Name="LoginPhone" HorizontalAlignment="Left" Margin="340,4,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" TextChanged="SettingsChanged"/>
+                <PasswordBox x:Name="LoginPassword" HorizontalAlignment="Left" Margin="533,4,0,0" VerticalAlignment="Top" Width="120" PasswordChanged="SettingsChanged"/>
             </Grid>
         </TabItem>
         <TabItem Header="Statistic">
             <Grid Background="#FFE5E5E5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
                 <Button x:Name="CalculateStatistic" Content="Расчитать" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="95" Click="CalculateStatistic_Click"/>
                 <Label Content="% Побед изначальных фавортов:" HorizontalAlignment="Left" Margin="11,40,0,0" VerticalAlignment="Top">
                     <Label.ToolTip>
@@ -116,13 +126,13 @@
                     </Label.ToolTip>
                 </Label>
                 <Label x:Name="Win_Favorits" Content="0" HorizontalAlignment="Left" Margin="140,92,0,0" VerticalAlignment="Top"/>
-                <Button Content="Simulate" HorizontalAlignment="Right" Margin="0,10,13,0" VerticalAlignment="Top" Width="87"/>
+                <Button x:Name="Simulate" Content="Simulate" HorizontalAlignment="Right" Margin="0,10,13,0" VerticalAlignment="Top" Width="87" Click="Simulate_Click"/>
                 <Label Content="Стартовый капитал:" Margin="0,36,143,0" HorizontalContentAlignment="Right" VerticalContentAlignment="Stretch" VerticalAlignment="Top" HorizontalAlignment="Right"/>
                 <TextBox HorizontalAlignment="Right" Margin="0,40,13,0" TextWrapping="Wrap" Text="1000" VerticalAlignment="Top" Width="120"/>
                 <Label Content="Сумма за каждую ставку:" Margin="0,59,144,0" HorizontalContentAlignment="Right" VerticalContentAlignment="Stretch" HorizontalAlignment="Right" VerticalAlignment="Top"/>
                 <TextBox HorizontalAlignment="Right" Margin="0,63,13,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="120"/>
                 <Label Content="* Укажите 0, что бы расчет был 5% от суммы" Margin="0,81,10,0" FontSize="9" HorizontalAlignment="Right" VerticalAlignment="Top"/>
-                <TextBox Margin="11,123,10,10" TextWrapping="Wrap" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" IsEnabled="False"/>
+                <TextBox x:Name="Simulate_TextBox" Margin="11,123,10,10" TextWrapping="Wrap" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible"/>
             </Grid>
         </TabItem>
     </TabControl>

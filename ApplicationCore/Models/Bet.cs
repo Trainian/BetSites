@@ -13,7 +13,9 @@ namespace ApplicationCore.Models
         public string AuxiliaryLocator { get; set; }
         public TimeSpan BetTime { get; set; }
         public string Score { get; set; }
-        public DateTime CreateDate { get; set; }
+        public DateTime CreateDate { get; set; } = DateTime.Now;
+
+
         public virtual ICollection<Coefficient> Coefficients { get; set; } = new ObservableCollection<Coefficient>();
     }
 }

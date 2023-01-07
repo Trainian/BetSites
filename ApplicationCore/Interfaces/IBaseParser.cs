@@ -9,6 +9,6 @@ namespace ApplicationCore.Interfaces
 {
     public interface IBaseParser
     {
-        Task Run(CancellationToken token, int scrolls = 0);
+        Task Run(CancellationToken token, string loginPhone, string loginPassword, int scrolls = 0);
     }
 }

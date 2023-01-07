@@ -11,6 +11,7 @@ namespace ApplicationCore.Models
         public double RatioThird { get; set; }
         public TimeSpan BetTime { get; set; }
         public string Score { get; set; }
+        public bool IsMadeBet { get; set; }
         public int BetId { get; set; }
 
 

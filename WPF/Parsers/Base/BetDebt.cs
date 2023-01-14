@@ -6,10 +6,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WPF.Interfaces
+namespace WPF.Parsers.Base
 {
-    public interface IDebtService
+    public abstract class BetDebt
     {
-        Task<bool> CheckAndDebt(IWebElement webElement, Bet bet);
+        public abstract Task<bool> CheckAndDebt(IWebElement webElement, Bet bet);
     }
 }

@@ -33,6 +33,7 @@ using WPF.Parsers;
 using WPF.Services;
 using WPF.Services.Factory;
 using WPF.Static;
+using WPF.ViewModels;
 
 namespace WPF
 {
@@ -55,36 +56,28 @@ namespace WPF
         public static object locker = new object();
         private static CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
+        public static MainViewModel MainViewModel;
+
         public MainWindow(BetContext context)
         {
             InitializeComponent();
+
             _context = context;
             BetsViewSource = (CollectionViewSource)FindResource(nameof(BetsViewSource));
             CoefficientsViewSource = (CollectionViewSource)FindResource(nameof(CoefficientsViewSource));
+
             var services = ServiceProviderFactory.Get;
             _serviceStatistic = services.GetService<IStatisticService>()!;
             _serviceSimulate = services.GetService<ISimulateService>()!;
             _serviceSettings = services.GetService<ISettingsService>()!;
+
+            MainViewModel = Resources["ViewModel"] as MainViewModel;
+            MainViewModel.Settings = _serviceSettings.GetSettings();
         }
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            _context.Bets.Load();
-            _context.Coefficients.Load();
-
-            Bets = _context.Bets.Local.ToObservableCollection();
-            Bets.CollectionChanged += Bets_CollectionChanged;
-            BindingOperations.EnableCollectionSynchronization(Bets, locker);
-
-            Coefficients = _context.Coefficients.Local.ToObservableCollection();
-            Coefficients.CollectionChanged += Coefficients_CollectionChanged;
-            BindingOperations.EnableCollectionSynchronization(Coefficients, locker);
-
-            BetsViewSource.Source = Bets;
-
-            var user = _serviceSettings.GetSettings();
-            LoginPhone.Text = user.PhoneNumber;
-            LoginPassword.Password = user.Password;
+            SetupBindings();
         }
 
         private void Coefficients_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -125,19 +118,20 @@ namespace WPF
             int scrolls;
             var isCount = int.TryParse(Scrolls.Text, out scrolls);
             var loginPhone = LoginPhone.Text;
-            var loginPassword = LoginPassword.Password;
+            var loginPassword = LoginPassword.Text;
+            var betRate = int.Parse(BetRate.Text);
             _cancellationTokenSource = new CancellationTokenSource();
             _cancellationToken = _cancellationTokenSource.Token;
 
             if (isCount != true)
             {
-                MessageBox.Show("Count scrolls most be count");
+                MessageBox.Show("Кол-во скроллов, должно быть числом!");
                 return;
             }
 
             try
             {
-                await FonBetStart(loginPhone,loginPassword, scrolls);
+                await FonBetStart(loginPhone,loginPassword, betRate, scrolls);
             }
             catch (AggregateException ae)
             {
@@ -145,7 +139,7 @@ namespace WPF
             }
             catch (Exception ex)
             {
-                //throw new Exception($"Ошибка Драйвера.\n{ex.Message}");
+                throw new Exception($"Ошибка Драйвера.\n{ex.Message}");
             }
         }
 
@@ -157,13 +151,7 @@ namespace WPF
                 var result = MessageBox.Show("Сохранить настройки пользователя?", "Пользователь", MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (result == MessageBoxResult.Yes)
                 {
-                    int scrolls;
-                    var settings = _serviceSettings.GetSettings();
-                    settings.PhoneNumber = LoginPhone.Text;
-                    settings.Password = LoginPassword.Password;
-                    if (Int32.TryParse(Scrolls.Text, out scrolls))
-                        settings.Scrolls = scrolls;
-                    _serviceSettings.SetSettings(settings);
+                    _serviceSettings.SetSettings(MainViewModel.Settings);
                 }
             }
 
@@ -171,9 +159,12 @@ namespace WPF
             _context.Dispose();
             base.OnClosing(e);
         }
-        private async Task FonBetStart(string loginPhone, string loginPassword, int scrolls)
+
+        private async Task FonBetStart(string loginPhone, string loginPassword,int betRate, int scrolls)
         {
-            await Task.Run(() => new FonBetParser().Run(_cancellationToken, loginPhone, loginPassword, scrolls), _cancellationToken).ConfigureAwait(false);
+            await Task.Run(() => new FonBetParser()
+                .Run(_cancellationToken), _cancellationToken)
+                .ConfigureAwait(false);
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -196,14 +187,34 @@ namespace WPF
 
         private async void Simulate_Click(object sender, RoutedEventArgs e)
         {
+            var optionalSimulate = cb_SimulateOptionalIsOn.IsChecked ?? false;
+            var minRatio = double.Parse(tb_SimulateRandomMinRatio.Text.Replace('.',','));
+            var maxRatio = double.Parse(tb_SimulateRandomMaxRatio.Text.Replace('.',','));
+            var betToWinner = cb_SimulateOptionalToWinner.IsChecked ?? false;
             await Task.Run(async () =>
             {
-                var simulate = _serviceSimulate.Run(1000, 50);
+                var simulate = _serviceSimulate.Run(1000, 50, optionalSimulate, minRatio, maxRatio, betToWinner);
                 await foreach (var item in simulate)
                 {
                     Simulate_TextBox.Dispatcher.Invoke(() => Simulate_TextBox.Text += item.ToString() + "\n");
                 }
-            });
+            }).ConfigureAwait(false);
+        }
+
+        private void SetupBindings()
+        {
+            _context.Bets.Load();
+            _context.Coefficients.Load();
+
+            Bets = _context.Bets.Local.ToObservableCollection();
+            Bets.CollectionChanged += Bets_CollectionChanged;
+            BindingOperations.EnableCollectionSynchronization(Bets, locker);
+
+            Coefficients = _context.Coefficients.Local.ToObservableCollection();
+            Coefficients.CollectionChanged += Coefficients_CollectionChanged;
+            BindingOperations.EnableCollectionSynchronization(Coefficients, locker);
+
+            BetsViewSource.Source = Bets;
         }
 
         private void SettingsChanged(object sender, TextChangedEventArgs e)
@@ -211,9 +222,9 @@ namespace WPF
             _settingsChanged = true;
         }
 
-        private void SettingsChanged(object sender, RoutedEventArgs e)
+        private void btn_ClearSimulate(object sender, RoutedEventArgs e)
         {
-            _settingsChanged = true;
+            Simulate_TextBox.Clear();
         }
     }
 }

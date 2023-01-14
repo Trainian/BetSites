@@ -24,5 +24,13 @@ namespace WPF.Static
         public const string SportSection = ".sport-section__caption--7bUR8M";
         // Данные пользователя
         public const string Balance = ".header__login-balance";
+        public const string ActiveBets = "#page__wrap > div.custom-scrollbar-area--2vqdtU.page__customScrollArea > div > div > div > div.page-layout--NEKen1.mainBackground-1gm6nhbd5 > div > div > div.coupon-layout__coupons--1GRTTH._wide--7xNXTw.coupons > div > div.custom-scrollbar-area__view-port--3hgpFp > div > div.tabs--3R8Yc4 > div.filter--3XxhaB > div:nth-child(2)";
+        // Настройки
+        public const string FastBetSwitcher = ".switch--1HvPTt";
+        public const string FastBetRate = ".edit--2I69aV";
+        // Модальный окна
+        public const string FastBetModel = ".modal-container";
+        public const string FastBetModelRemember = ".modal-window__checkbox";
+        public const string FastBetModalYes = "#page__wrap > div.modal-container > div > div.modal-window__button-area > a:nth-child(1)";
     }
 }

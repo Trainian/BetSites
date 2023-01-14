@@ -1,7 +1,9 @@
 ﻿using ApplicationCore.Models;
 using ApplicationCore.Repositories;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -23,25 +25,34 @@ namespace WPF.Services
 
         public async Task<Bet> AddBetAsync(Bet entity)
         {
-            // Находим Ставку с таким же названием и текущей датой
-            var bets = await _betRepository.GetAsync(bet => 
-                bet.Name == entity.Name && 
-                bet.CreateDate.Date == entity.CreateDate.Date);            
-            var bet = bets.FirstOrDefault();
+            try
+            {
+                // Находим Ставку с таким же названием и текущей датой
+                var bets = await _betRepository.GetAsync(bet =>
+                    bet.Name == entity.Name &&
+                    bet.CreateDate.Date == entity.CreateDate.Date);
+                var bet = bets.FirstOrDefault();
 
-            // Если новая ставка, создаем и возвращаем
-            if (bet == null)
-                return await CreateBetAsync(entity);
+                // Если новая ставка, создаем и возвращаем
+                if (bet == null)
+                    return await CreateBetAsync(entity);
 
-            // Если в ставке были изминения, обновляем их
-            if (!ComparerBet(entity,bet))
-                bet = await UpdateBetAsync(entity, bet);
+                // Если в ставке были изминения, обновляем их
+                if (!ComparerBet(entity, bet))
+                    bet = await UpdateBetAsync(entity, bet);
 
-            // Проверяем коэффициенты, если изменились, добавляем
-            if (!ComparerCoefficient(entity.Coefficients.Last(), bet.Coefficients.Last()))
-                await AddCoefficientToBet(bet, entity.Coefficients.Last());
+                // Проверяем коэффициенты, если изменились, добавляем
+                if (!ComparerCoefficient(entity.Coefficients.Last(), bet.Coefficients.Last()))
+                    await AddCoefficientToBet(bet, entity.Coefficients.Last());
 
-            return bet;
+                return bet;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+            }
+
+            return new Bet();
         }
 
         public async Task<Bet> CreateBetAsync(Bet entity)
@@ -80,7 +91,36 @@ namespace WPF.Services
             coefficient.BetId = bet.Id;
             coefficient.Time = DateTime.Now;
             //await _coefficientRepository.AddAsync(coefficient);
-            await App.Current.Dispatcher.Invoke(async() => await _coefficientRepository.AddAsync(coefficient).ConfigureAwait(false)).ConfigureAwait(false);
+            await App.Current.Dispatcher.Invoke(async() => await _coefficientRepository.AddAsync(coefficient));
+        }
+
+        public async Task<IEnumerable<Bet>> GetAllBetsWithDebtAndWithTheEnd()
+        {
+            var bets = new List<Bet>();
+            var timeSpan = new TimeSpan(1, 28, 00);
+            if (await _betRepository.CountAsync() != 0)
+            {
+                var betsDb = (List<Bet>)await _betRepository.GetAsync(b => b.Coefficients.Count >= 10);
+                betsDb = betsDb.Where(b => b.BetTime >= timeSpan).ToList();
+                foreach (var bet in betsDb)
+                {
+                    var isMade = bet.Coefficients.FirstOrDefault(c => c.IsMadeBet == true);
+                    if (isMade != null)
+                        bets.Add(bet);
+                }
+            }
+            return bets;
+        }
+
+        public async Task<IEnumerable<Bet>> GetAllBetsWithTheEnd()
+        {
+            var bets = new List<Bet>();
+            if (await _betRepository.CountAsync() != 0)
+            {
+                var betsDb = (List<Bet>)await _betRepository.GetAsync(b => b.Coefficients.Count >= 10);
+                bets = betsDb.Where(b => b.BetTime >= new TimeSpan(1, 24, 00)).ToList();
+            }
+            return bets;
         }
 
         private bool ComparerBet (Bet entityNew, Bet entityDb)
@@ -94,7 +134,8 @@ namespace WPF.Services
         {
             return entityNew.RatioFirst == entityDb.RatioFirst &&
                 entityNew.RatioSecond == entityDb.RatioSecond &&
-                entityNew.RatioThird == entityDb.RatioThird;
+                entityNew.RatioThird == entityDb.RatioThird &&
+                entityNew.Score == entityDb.Score;
         }
     }
 }

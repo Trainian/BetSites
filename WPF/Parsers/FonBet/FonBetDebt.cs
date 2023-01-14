@@ -8,26 +8,27 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WPF.Interfaces;
+using WPF.Parsers.Base;
 using WPF.Services.Factory;
 using WPF.Static;
 
-namespace WPF.Parsers
+namespace WPF.Parsers.FonBet
 {
-    public class FonbetDebtService : IDebtService
+    public class FonBetDebt : BetDebt
     {
         private readonly IBetService _betService;
 
-        public FonbetDebtService()
+        public FonBetDebt()
         {
             var services = ServiceProviderFactory.Get;
             _betService = services.GetService<IBetService>()!;
         }
-        public async Task<bool> CheckAndDebt(IWebElement webElement, Bet bet)
+        public override async Task<bool> CheckAndDebt(IWebElement webElement, Bet bet)
         {
             var betDb = await _betService.GetBetByName(bet.Name);
-            if(betDb == null)
+            if (betDb == null)
             {
-                Debug.WriteLine("------------> Список Ставок был пуст...");
+                Debug.WriteLine($"------------> Добавление новой ставки в базу \'{bet.Name}\'");
                 return false;
             }
 
@@ -37,7 +38,7 @@ namespace WPF.Parsers
                 return false;
 
             // Проверяем что счет не равный, иначе выходим
-            var result = bet.Score.Split(':')?.Select(Int32.Parse)?.ToList();
+            var result = bet.Score.Split(':')?.Select(int.Parse)?.ToList();
             if (result![0] == result![1])
                 return false;
 
@@ -46,7 +47,6 @@ namespace WPF.Parsers
             var betTo = result[0] > result[1] ? 0 : 2;
             betCoefficients[betTo].Click();
 
-            ///TODO: Добавить клики на сумму ставки и на сделать ставку
             return true;
         }
     }

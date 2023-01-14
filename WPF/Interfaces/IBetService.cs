@@ -15,5 +15,7 @@ namespace WPF.Interfaces
         Task<Bet?> GetBetByIdAsync(int id);
         Task<Bet?> GetBetByName(string name);
         Task<IEnumerable<Bet>?> GetAllBetAsync();
+        Task<IEnumerable<Bet>> GetAllBetsWithTheEnd();
+        Task<IEnumerable<Bet>> GetAllBetsWithDebtAndWithTheEnd();
     }
 }

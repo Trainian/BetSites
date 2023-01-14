@@ -14,7 +14,7 @@ namespace WPF.Converters
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             IEnumerable<Coefficient> items = value as IEnumerable<Coefficient>;
-            if (items != null)
+            if (items.Count() != 0)
             {
                 switch (parameter)
                 {

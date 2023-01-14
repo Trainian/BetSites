@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using WPF.Enums;
 using WPF.Interfaces;
 
 namespace WPF.Services
@@ -129,13 +130,6 @@ namespace WPF.Services
             decimal perc = (decimal)(100 / ((decimal)betsCount / (decimal)betWins));
             perc = Math.Round(perc, 2);
             return betWins == 0 ? 100 : perc;
-        }
-
-        private enum WinnerEnum
-        {
-            FirstWin,
-            SecondWin,
-            NoOneWin
         }
 
         private WinnerEnum GetWinnerByScore(Coefficient coefficient)

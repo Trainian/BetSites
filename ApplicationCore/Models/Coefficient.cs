@@ -10,7 +10,7 @@ namespace ApplicationCore.Models
         public double RatioSecond { get; set; }
         public double RatioThird { get; set; }
         public TimeSpan BetTime { get; set; }
-        public string Score { get; set; }
+        public string Score { get; set; } = "0:0";
         public bool IsMadeBet { get; set; }
         public int BetId { get; set; }
 

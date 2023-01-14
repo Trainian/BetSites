@@ -13,28 +13,34 @@ using WPF.Services;
 using WPF.Static;
 using WPF.Converters;
 using WPF.Services.Factory;
+using System.Diagnostics;
 
-namespace WPF.Parsers
+namespace WPF.Parsers.FonBet
 {
-    public class FonBetModelCreater
+    public class FonBetModel
     {
         private ServiceProvider _services;
         private IBetService _betservice;
 
-        public FonBetModelCreater()
+        public FonBetModel()
         {
             _services = ServiceProviderFactory.Get;
             _betservice = _services.GetService<IBetService>()!;
         }
-        public Bet CreateModels (IWebElement element)
+        public Bet CreateModels(IWebElement element)
         {
             try
             {
                 var model = new Bet();
                 var listCoef = new List<double>();
+                var time = "00:00";
                 model.Name = element.FindElement(By.CssSelector(SearchElements.BetName)).Text;
                 model.Score = element.FindElement(By.CssSelector(SearchElements.BetScore)).Text;
-                var time = element.FindElement(By.CssSelector(SearchElements.BetTime)).Text;
+                try
+                {
+                    time = element.FindElement(By.CssSelector(SearchElements.BetTime)).Text;
+                }
+                catch (Exception ex) { Debug.WriteLine($"------------> У ставки поле ВРЕМЯ было пустое..."); }
                 model.BetTime = new TimeSpan().ConvertToTimeSpan(time);
                 model.AuxiliaryLocator = element.ToString()!;
 
@@ -45,7 +51,7 @@ namespace WPF.Parsers
                     var coefNumber = double.Parse(coefString);
                     listCoef.Add(coefNumber);
                 }
-                var coefficient = new Coefficient() 
+                var coefficient = new Coefficient()
                 {
                     RatioFirst = listCoef[0],
                     RatioSecond = listCoef[1],
@@ -53,7 +59,7 @@ namespace WPF.Parsers
                     Score = model.Score,
                     BetTime = model.BetTime
                 };
-                
+
                 model.Coefficients.Add(coefficient);
 
                 return model;

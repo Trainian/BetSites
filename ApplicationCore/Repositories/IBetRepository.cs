@@ -9,5 +9,6 @@ namespace ApplicationCore.Repositories
 {
     public interface IBetRepository : IRepository<Bet>
     {
+
     }
 }

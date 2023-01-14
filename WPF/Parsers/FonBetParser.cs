@@ -1,5 +1,4 @@
-﻿using ApplicationCore.Interfaces;
-using OpenQA.Selenium.Chrome;
+﻿using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium;
 using System;
@@ -24,37 +23,57 @@ using System.Threading;
 using OpenQA.Selenium.DevTools;
 using WPF.Services.Factory;
 using Newtonsoft.Json.Linq;
+using WPF.ViewModels;
+using WPF.Parsers.FonBet;
 
 namespace WPF.Parsers
 {
-    public class FonBetParser : IBaseParser
+    public class FonBetParser : IBetParserService
     {
-        private IBetService _betservice;
         private IWebDriver _driver;
+        private WebDriverWait _driverWaiter;
+        private IBetService _betService;
         private int _scrolls = 1;
         private int _curScroll = 1;
+        private int _betRate = 50;
+        private bool _betIsDisabled = false;
         private string _curDer = Directory.GetCurrentDirectory();
-        private Random _random = new Random();
         private string _loginPhone;
         private string _loginPassword;
+        private MainViewModel _mainViewModel;
+
+        private FonBetPars pars;
+        private FonBetLogin login;
+        private FonBetUserInformation userInfo;
 
         public FonBetParser()
         {
             // Настраиваем Сервисы
             var services = ServiceProviderFactory.Get;
-            _betservice = services.GetService<IBetService>()!;
+            _betService = services.GetService<IBetService>()!;
 
             // Настраиваем Драйвер
             _driver = new ChromeDriver(_curDer);
             _driver.Manage().Window.Size = new System.Drawing.Size(1152, 864);
             _driver.Manage().Timeouts().ImplicitWait = new TimeSpan(0, 0, 3);
+            _driverWaiter = new WebDriverWait(_driver, TimeSpan.FromSeconds(3));
+            _driverWaiter.IgnoreExceptionTypes(typeof(NoSuchElementException), typeof(StaleElementReferenceException));
+
+            // Загружаем и устанавливаем настройки
+            _mainViewModel = MainWindow.MainViewModel;
+            _loginPhone = _mainViewModel.Settings.PhoneNumber;
+            _loginPassword = _mainViewModel.Settings.Password;
+            _scrolls = _mainViewModel.Settings.Scrolls;
+            _betRate = _mainViewModel.Settings.BetRate;
+            _betIsDisabled = _mainViewModel.Settings.BetIsDisabled;
+
+            pars = new FonBetPars();
+            login = new FonBetLogin();
+            userInfo = new FonBetUserInformation();
         }
 
-        public async Task Run(CancellationToken token, string loginPhone, string loginPassword, int scrolls = 1)
+        public async Task Run(CancellationToken token)
         {
-            _scrolls = scrolls;
-            _loginPhone = loginPhone;
-            _loginPassword = loginPassword;
             _driver.Navigate().GoToUrl(@"https://www.fon.bet/live/");
 
             // Регистрируем Токен остановки потока
@@ -76,19 +95,30 @@ namespace WPF.Parsers
                 }
 
                 // Проверяем что был выполнен вход, иначе закрываем Драйвер и выводим сообщение
-                var loged = TryToLogin(_driver, _loginPhone, _loginPassword);
+                var loged = login.TryToLogin(_driver, _loginPhone, _loginPassword);
                 if (loged != true)
                 {
                     CloseDriver("Вход не выполнен");
                     return;
                 }
 
+                // Настройка для ставок, если не отключена
+                if(!_betIsDisabled)
+                    SetupBet(_driver, _betRate);
+
                 // Начинаем парсинг сайта
                 do
                 {
-                    await ParsSite(_driver);
+                    userInfo.UpdateUserInformation(_driver);
+
+                    var bets = await pars.ParsSite(_driver, _betIsDisabled);
+
+                    foreach (var bet in bets)
+                        await _betService.AddBetAsync(bet);
+
                     Scroll();
-                } while (true);
+                } while (!token.IsCancellationRequested);
+                Debug.WriteLine("Закрытие Парсинга");
             }
             catch (Exception ex)
             {
@@ -96,14 +126,14 @@ namespace WPF.Parsers
             }
         }
 
-        private void CloseDriver(string message)
+        public void CloseDriver(string message)
         {
             MessageBox.Show(message);
             _driver.Close();
             _driver.Dispose();
         }
 
-        private bool WaiterLoading (IWebDriver driver, string searchElement = SearchElements.SportSection)
+        private bool WaiterLoading(IWebDriver driver, string searchElement = SearchElements.SportSection)
         {
             IWebElement? loader = null;
             var iteration = 0;
@@ -128,62 +158,19 @@ namespace WPF.Parsers
             return true;
         }
 
-        private bool TryToLogin (IWebDriver driver, string loginPhone, string loginPassword)
+        private void SetupBet(IWebDriver driver, int betRate)
         {
-            var login = _driver.FindElement(By.CssSelector(SearchElements.CheckNotLoged));
-            Task.Delay(1500);
-            login.Click();
-            _driver.FindElement(By.CssSelector(SearchElements.LoginPhoneForm)).SendKeys(loginPhone);
-            _driver.FindElement(By.CssSelector(SearchElements.LoginPasswordForm)).SendKeys(loginPassword);
-            _driver.FindElement(By.CssSelector(SearchElements.LoginButton)).Click();
-            Task.Delay(2000);
-            var balance = _driver.FindElement(By.CssSelector(SearchElements.Balance));
-            return balance != null ? true : false;
+            string betRateString = betRate.ToString();
+            driver.FindElement(By.CssSelector(SearchElements.FastBetSwitcher)).Click();
+            var oldRate = driver.FindElement(By.CssSelector(SearchElements.FastBetRate)).GetAttribute("value");
+            for (int i = 0; i < oldRate.Length; i++)
+            {
+                driver.FindElement(By.CssSelector(SearchElements.FastBetRate)).SendKeys(Keys.Backspace);
+            }
+            driver.FindElement(By.CssSelector(SearchElements.FastBetRate)).SendKeys(betRateString);
         }
 
-        private async Task ParsSite(IWebDriver driver)
-        {
-            IReadOnlyCollection<IWebElement> sports = new List<IWebElement>();
-            do
-            {
-                sports = _driver.FindElements(By.CssSelector(SearchElements.Bet));
-            }
-            while (sports.Count == 0);
-
-
-            var parsModels = new FonBetModelCreater();
-            var debtService = new FonbetDebtService();
-            foreach (var bet in sports)
-            {
-                try
-                {
-                    var name = bet.Text;
-                    if (name.Contains("—"))
-                    {
-                        var newBet = parsModels.CreateModels(bet);
-                        var debt = await debtService.CheckAndDebt(bet, newBet);
-                        if (debt == true)
-                        {
-                            newBet.Coefficients.Last().IsMadeBet = true;
-                            await Task.Delay(_random.Next(1500,5000));
-                        }
-
-                        lock (MainWindow.locker)
-                        {
-                            _betservice.AddBetAsync(newBet).Wait();
-                        }
-                    }
-                }
-                catch (StaleElementReferenceException){ }
-                catch (Exception e)
-                {
-                    Debug.WriteLine(e.Message);
-                }
-            }
-            
-        }
-        /// Скроллинг
-        public void Scroll()
+        private void Scroll()
         {
             var heightScroll = 0;
 
@@ -195,7 +182,7 @@ namespace WPF.Parsers
             else
             {
                 _curScroll = 1;
-                heightScroll =  -1000 * _scrolls;
+                heightScroll = -1000 * _scrolls;
             }
 
             var scrollElement = _driver.FindElement(By.CssSelector(SearchElements.ScrollElement));
@@ -210,7 +197,7 @@ namespace WPF.Parsers
                 .ScrollFromOrigin(scrollOrigin, 0, heightScroll)
                 .Perform();
 
-            Task.Delay(500);
+            Task.Delay(1000);
         }
 
     }

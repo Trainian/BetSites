@@ -8,7 +8,7 @@ namespace WPF.Converters
 {
     public static class ParsTimeToTimeSpan
     {
-        public static TimeSpan ConvertToTimeSpan (this TimeSpan ts, string str)
+        public static TimeSpan ConvertToTimeSpan (this TimeSpan ts, string str = "00:00")
         {
             var separators = str.Split(":").Length;
             if (separators == 2)

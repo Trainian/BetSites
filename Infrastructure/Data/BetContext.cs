@@ -20,7 +20,7 @@ namespace Infrastructure.Data
         public BetContext(DbContextOptions<BetContext> options) : base(options)
         {
             Debug.WriteLine(options);
-            Database.EnsureDeleted();
+            //Database.EnsureDeleted();
             Database.EnsureCreated();
         }
 

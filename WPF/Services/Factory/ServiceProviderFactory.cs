@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WPF.Interfaces;
-using WPF.Parsers;
+using WPF.Parsers.FonBet;
 
 namespace WPF.Services.Factory
 {
@@ -38,9 +38,10 @@ namespace WPF.Services.Factory
             services.AddScoped(typeof(IBetRepository), typeof(BetRepository));
             services.AddScoped(typeof(ICoefficientRepository), typeof(CoefficientRepository));
             services.AddScoped(typeof(IBetService), typeof(BetService));
-            services.AddScoped(typeof(IUserService), typeof(UserService));
-            services.AddScoped(typeof(IDebtService), typeof(FonbetDebtService));
+            services.AddScoped(typeof(ISettingsService), typeof(SettingsService));
+            services.AddScoped(typeof(IStatisticService), typeof(StatisticService));
             services.AddScoped(typeof(ISimulateService), typeof(SimulateService));
+            services.AddScoped(typeof(ICoefficientService), typeof(CoefficientService));
 
             services.AddTransient<MainWindow>();
         }

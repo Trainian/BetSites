@@ -9,10 +9,10 @@ namespace ApplicationCore.Models
 {
     public class Bet : BaseObject
     {
-        public string Name { get; set; }
-        public string AuxiliaryLocator { get; set; }
+        public string Name { get; set; } = "";
+        public string AuxiliaryLocator { get; set; } = "";
         public TimeSpan BetTime { get; set; }
-        public string Score { get; set; }
+        public string Score { get; set; } = "0:0";
         public DateTime CreateDate { get; set; } = DateTime.Now;
 
 

@@ -41,7 +41,6 @@ namespace WPF.ViewModels
             }
         }
 
-
         public event PropertyChangedEventHandler? PropertyChanged;
 
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")

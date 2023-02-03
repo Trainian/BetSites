@@ -24,26 +24,26 @@ namespace WPF.Parsers.FonBet
             modelservice = new FonBetModel();
         }
 
-        public override async Task<ICollection<Bet>> ParsSite(IWebDriver driver, bool betIsDisabled)
+        public override async Task<ICollection<Bet>> ParsSite(IWebDriver driver, decimal minRation, decimal maxRatio, bool debtToWinner, bool betIsDisabled)
         {
             bets = new List<Bet>();
             _random = new Random(DateTime.Now.Second);
 
-            IReadOnlyCollection<IWebElement> sports = new List<IWebElement>();
-            sports = driver.FindElements(By.CssSelector(SearchElements.Bet));
+            IReadOnlyCollection<IWebElement> webElementsList = new List<IWebElement>();
+            webElementsList = driver.FindElements(By.CssSelector(SearchElements.Bet));
 
-            if (sports.Count == 0)
+            if (webElementsList.Count == 0)
                 return bets;
 
-            foreach (var bet in sports)
+            foreach (var webElement in webElementsList)
             {
                 try
                 {
-                    var name = bet.FindElement(By.CssSelector(SearchElements.BetName)).Text;
+                    var name = webElement.FindElement(By.CssSelector(SearchElements.BetName)).Text;
                     if (name.Contains("—"))
                     {
-                        var newBet = modelservice.CreateModels(bet);
-                        var debt = await debtService.CheckAndDebt(bet, newBet);
+                        var newBet = modelservice.CreateModels(webElement);
+                        var debt = await debtService.CheckAndDebt(webElement, newBet, minRation, maxRatio, debtToWinner);
 
                         if (debt == true && !betIsDisabled)
                         {
@@ -59,6 +59,7 @@ namespace WPF.Parsers.FonBet
                             newBet.Coefficients.Last().IsMadeBet = true;
                             await Task.Delay(_random.Next(1500, 5000));
                         }
+
                         bets.Add(newBet);
                     };
                 }

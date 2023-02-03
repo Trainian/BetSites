@@ -30,7 +30,7 @@ namespace WPF.Services
             return coefficients.FirstOrDefault();
         }
 
-        public async Task<Coefficient?> GetOptionalCoefficientByBetId(int betId, double minRate, double maxRate, bool isBetToWinner)
+        public async Task<Coefficient?> GetOptionalCoefficientByBetId(int betId, decimal minRate, decimal maxRate, bool isBetToWinner)
         {
             var coefficients = await _repository.GetAsync(c => c.BetId == betId);
             List<Coefficient> coefficientsSorted = new List<Coefficient>();
@@ -40,7 +40,7 @@ namespace WPF.Services
                 if (coefficient.RatioFirst == coefficient.RatioThird)
                     continue;
 
-                var ratio = coefficient.RatioFirst < coefficient.RatioThird ? coefficient.RatioFirst : coefficient.RatioFirst;
+                var ratio = coefficient.RatioFirst < coefficient.RatioThird ? (decimal)coefficient.RatioFirst : (decimal)coefficient.RatioFirst;
                 if (ratio > minRate && ratio < maxRate)
                     coefficientsSorted.Add(coefficient);
             }

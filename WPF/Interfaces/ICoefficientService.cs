@@ -11,6 +11,6 @@ namespace WPF.Interfaces
     {
         Task<Coefficient> GetWinnerCoefficientByBetId(int betId);
         Task<Coefficient?> GetIsMadeBetCoefficientByBetId(int betId);
-        Task<Coefficient?> GetOptionalCoefficientByBetId(int betId, double minRate, double maxRate, bool isBetToWinner);
+        Task<Coefficient?> GetOptionalCoefficientByBetId(int betId, decimal minRate, decimal maxRate, bool isBetToWinner);
     }
 }

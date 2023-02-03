@@ -20,6 +20,7 @@ namespace WPF.Static
         public const string LoginPasswordForm = "#auth_form > div > div > div.login-form._new_design > form > div:nth-child(2) > label > div > input[type=password]";
         public const string LoginButton = "#auth_form > div > div > div.login-form._new_design > form > div.login-form__form-row._right > div.login-form__buttons-wrap > div > button > div > span";
         // Секции
+        public const string BetSection = ".sport-filter-layout__content--3V79my";
         public const string ScrollElement = ".scrollbar__thumb-panel__thumb--5BGghH"; //".sport-filter-layout__content--3V79m";
         public const string SportSection = ".sport-section__caption--7bUR8M";
         // Данные пользователя

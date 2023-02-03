@@ -152,9 +152,9 @@ namespace WPF.Services
             var noOneComScore = coefficient.RatioSecond;
             var secondComScore = coefficient.RatioThird;
 
-            if (firstComScore < 2.0)
+            if (firstComScore < 2.0M)
                 return WinnerEnum.FirstWin;
-            else if (secondComScore < 2.0)
+            else if (secondComScore < 2.0M)
                 return WinnerEnum.SecondWin;
             else
                 return WinnerEnum.NoOneWin;

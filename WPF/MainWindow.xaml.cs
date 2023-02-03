@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -28,6 +29,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using WPF.Converters;
 using WPF.Interfaces;
 using WPF.Parsers;
 using WPF.Services;
@@ -50,6 +52,7 @@ namespace WPF
         private IStatisticService _serviceStatistic;
         private ISimulateService _serviceSimulate;
         private ISettingsService _serviceSettings;
+        private IBetService _serviceBet;
         private CancellationToken _cancellationToken = _cancellationTokenSource.Token;
         private bool _settingsChanged;
 
@@ -70,14 +73,27 @@ namespace WPF
             _serviceStatistic = services.GetService<IStatisticService>()!;
             _serviceSimulate = services.GetService<ISimulateService>()!;
             _serviceSettings = services.GetService<ISettingsService>()!;
+            _serviceBet = services.GetService<IBetService>()!;
 
             MainViewModel = Resources["ViewModel"] as MainViewModel;
             MainViewModel.Settings = _serviceSettings.GetSettings();
+
+            MainViewModel.Settings.TextDTSimulate = "Changed";
+            RefreshData();
         }
+
+        private async void RefreshData()
+        {
+            var dateList2 = await _serviceBet.GetEnabledDatesPickBets();
+            var list = dateList2.ToList();
+            CalendarConverter.Update(list);
+        }
+
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             SetupBindings();
+            _settingsChanged = false;
         }
 
         private void Coefficients_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -160,7 +176,7 @@ namespace WPF
             base.OnClosing(e);
         }
 
-        private async Task FonBetStart(string loginPhone, string loginPassword,int betRate, int scrolls)
+        private async Task FonBetStart(string loginPhone, string loginPassword, int betRate, int scrolls)
         {
             await Task.Run(() => new FonBetParser()
                 .Run(_cancellationToken), _cancellationToken)
@@ -188,12 +204,18 @@ namespace WPF
         private async void Simulate_Click(object sender, RoutedEventArgs e)
         {
             var optionalSimulate = cb_SimulateOptionalIsOn.IsChecked ?? false;
-            var minRatio = double.Parse(tb_SimulateRandomMinRatio.Text.Replace('.',','));
-            var maxRatio = double.Parse(tb_SimulateRandomMaxRatio.Text.Replace('.',','));
+            var minRatio = decimal.Parse(tb_SimulateRandomMinRatio.Text.Replace('.',','));
+            var maxRatio = decimal.Parse(tb_SimulateRandomMaxRatio.Text.Replace('.',','));
             var betToWinner = cb_SimulateOptionalToWinner.IsChecked ?? false;
+            var sum = decimal.Parse(tb_Sum.Text.Replace(".", ","));
+            var debt = decimal.Parse(tb_Debt.Text.Replace(".", ","));
+            if (debt == 0)
+                debt = sum / 100 * 5;
+            var startDate = MainViewModel.Settings.StartDTSimulate;
+            var endDate = MainViewModel.Settings.EndDTSimulate;
             await Task.Run(async () =>
             {
-                var simulate = _serviceSimulate.Run(1000, 50, optionalSimulate, minRatio, maxRatio, betToWinner);
+                var simulate = _serviceSimulate.Run(sum, debt, startDate, endDate, optionalSimulate, minRatio, maxRatio, betToWinner);
                 await foreach (var item in simulate)
                 {
                     Simulate_TextBox.Dispatcher.Invoke(() => Simulate_TextBox.Text += item.ToString() + "\n");
@@ -217,14 +239,57 @@ namespace WPF
             BetsViewSource.Source = Bets;
         }
 
+        private void btn_ClearSimulate(object sender, RoutedEventArgs e)
+        {
+            Simulate_TextBox.Clear();
+        }
+
+        private async void Simulate_FindOptimalSettings_Click(object sender, RoutedEventArgs e)
+        {
+            var minRatio = decimal.Parse(tb_SimulateRandomMinRatio.Text.Replace('.', ','));
+            var maxRatio = decimal.Parse(tb_SimulateRandomMaxRatio.Text.Replace('.', ','));
+            var betToWinner = cb_SimulateOptionalToWinner.IsChecked ?? false;
+            var sum = decimal.Parse(tb_Sum.Text.Replace(".", ","));
+            var debt = decimal.Parse(tb_Debt.Text.Replace(".", ","));
+            var startDate = MainViewModel.Settings.StartDTSimulate;
+            var endDate = MainViewModel.Settings.EndDTSimulate;
+            if (debt == 0)
+                debt = sum / 100 * 5;
+            await Task.Run(async () =>
+            {
+                var simulate = _serviceSimulate.FindOptimalSettings(sum, debt, startDate, endDate, minRatio, maxRatio, betToWinner);
+                await foreach (var item in simulate)
+                {
+                    Simulate_TextBox.Dispatcher.Invoke(() => {
+                        Simulate_TextBox.Text += item.ToString() + "\n";
+                        Simulate_TextBox.ScrollToEnd();
+                        });
+                }
+            }).ConfigureAwait(false);
+        }
+
+        private void dt_Choise_SelectedDatesChanged(object sender, SelectionChangedEventArgs e)
+        {
+            Debug.WriteLine("Изминение выбранно даты");
+            Calendar calendar = (Calendar)sender;
+            var selectedDT = calendar.SelectedDates;
+            MainViewModel.Settings.StartDTSimulate = selectedDT.First();
+            MainViewModel.Settings.EndDTSimulate = selectedDT.Last();            
+        }
+
+        private void btn_Calendar_Click(object sender, RoutedEventArgs e)
+        {
+            dt_Choise.Height = dt_Choise.Height == 30 ? 200 : 30;
+        }
+
         private void SettingsChanged(object sender, TextChangedEventArgs e)
         {
             _settingsChanged = true;
         }
 
-        private void btn_ClearSimulate(object sender, RoutedEventArgs e)
+        private void cb_CheckChange(object sender, RoutedEventArgs e)
         {
-            Simulate_TextBox.Clear();
+            _settingsChanged = true;
         }
     }
 }

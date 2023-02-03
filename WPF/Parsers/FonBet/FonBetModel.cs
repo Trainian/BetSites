@@ -32,7 +32,7 @@ namespace WPF.Parsers.FonBet
             try
             {
                 var model = new Bet();
-                var listCoef = new List<double>();
+                var listCoef = new List<decimal>();
                 var time = "00:00";
                 model.Name = element.FindElement(By.CssSelector(SearchElements.BetName)).Text;
                 model.Score = element.FindElement(By.CssSelector(SearchElements.BetScore)).Text;
@@ -48,7 +48,7 @@ namespace WPF.Parsers.FonBet
                 for (int i = 0; i < 3; i++)
                 {
                     var coefString = betCoefficient[i].Text != "-" ? betCoefficient[i].Text.Replace(".", ",") : "0,0";
-                    var coefNumber = double.Parse(coefString);
+                    var coefNumber = decimal.Parse(coefString);
                     listCoef.Add(coefNumber);
                 }
                 var coefficient = new Coefficient()

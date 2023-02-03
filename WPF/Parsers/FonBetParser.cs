@@ -37,6 +37,9 @@ namespace WPF.Parsers
         private int _curScroll = 1;
         private int _betRate = 50;
         private bool _betIsDisabled = false;
+        private bool _betToWinner;
+        private decimal _minRatio;
+        private decimal _maxRatio;
         private string _curDer = Directory.GetCurrentDirectory();
         private string _loginPhone;
         private string _loginPassword;
@@ -66,6 +69,9 @@ namespace WPF.Parsers
             _scrolls = _mainViewModel.Settings.Scrolls;
             _betRate = _mainViewModel.Settings.BetRate;
             _betIsDisabled = _mainViewModel.Settings.BetIsDisabled;
+            _betToWinner = _mainViewModel.Settings.BetToWinner;
+            _minRatio = _mainViewModel.Settings.MinRatio;
+            _maxRatio = _mainViewModel.Settings.MaxRatio;
 
             pars = new FonBetPars();
             login = new FonBetLogin();
@@ -111,7 +117,7 @@ namespace WPF.Parsers
                 {
                     userInfo.UpdateUserInformation(_driver);
 
-                    var bets = await pars.ParsSite(_driver, _betIsDisabled);
+                    var bets = await pars.ParsSite(_driver, _minRatio, _maxRatio, _betToWinner, _betIsDisabled);
 
                     foreach (var bet in bets)
                         await _betService.AddBetAsync(bet);
@@ -185,7 +191,8 @@ namespace WPF.Parsers
                 heightScroll = -1000 * _scrolls;
             }
 
-            var scrollElement = _driver.FindElement(By.CssSelector(SearchElements.ScrollElement));
+            var betSection = _driver.FindElement(By.CssSelector(SearchElements.BetSection));
+            var scrollElement = betSection.FindElement(By.CssSelector(SearchElements.ScrollElement));
             var scrollOrigin = new WheelInputDevice.ScrollOrigin
             {
                 Element = scrollElement,

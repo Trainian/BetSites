@@ -14,6 +14,156 @@
                               Source="{Binding Coefficients, Source={StaticResource BetsViewSource}}"/>
         <view:MainViewModel x:Key="ViewModel"/>
         <сonv:DataSourceToLastItemConverter x:Key="DataSourceToLastItemConverter"/>
+        <Style x:Key="DefaultCalendar" TargetType="Calendar">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Calendar}">
+                        <StackPanel HorizontalAlignment="Center" Name="PART_Root">
+                            <Grid Background="#FFE5E5E5">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <StackPanel Orientation="Horizontal" Margin="5">
+                                    <TextBox x:Name="PART_CalendareDates" Width="150" Margin="0,0,5,0" Text="{Binding Source={StaticResource ViewModel}, Path=Settings.TextDTSimulate}" IsReadOnly="True"/>
+                                    <Button x:Name="btn_Calendar" Grid.Row="0" CommandParameter="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}}" HorizontalAlignment="Right" Click="btn_Calendar_Click" Background="{x:Null}" BorderBrush="Black" Foreground="{x:Null}">
+                                        <Image Source="/Resources/Images/calendar.png" Width="15" Height="15" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Button>
+                                </StackPanel>
+                                <CalendarItem Grid.Row="1" Background="{TemplateBinding Control.Background}" BorderBrush="{TemplateBinding Control.BorderBrush}" BorderThickness="{TemplateBinding Control.BorderThickness}" Name="PART_CalendarItem" Style="{TemplateBinding Calendar.CalendarItemStyle}" />
+                            </Grid>
+                        </StackPanel>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="Calendar.CalendarDayButtonStyle" TargetType="{x:Type CalendarDayButton}">
+            <Setter Property="MinWidth" Value="5"/>
+            <Setter Property="MinHeight" Value="5"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type CalendarDayButton}">
+                        <ControlTemplate.Resources>
+                            <сonv:CalendarConverter x:Key="calendarConverter"/>
+                        </ControlTemplate.Resources>
+                        <Grid>
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualStateGroup.Transitions>
+                                        <VisualTransition GeneratedDuration="0:0:0.1"/>
+                                    </VisualStateGroup.Transitions>
+                                    <VisualState x:Name="Normal"/>
+                                    <VisualState x:Name="MouseOver">
+                                        <Storyboard>
+                                            <DoubleAnimation Duration="0" Storyboard.TargetName="HighlightBackground" To="0.5" Storyboard.TargetProperty="Opacity"/>
+                                        </Storyboard>
+                                    </VisualState>
+                                    <VisualState x:Name="Pressed">
+                                        <Storyboard>
+                                            <DoubleAnimation Duration="0" Storyboard.TargetName="HighlightBackground" To="0.5" Storyboard.TargetProperty="Opacity"/>
+                                        </Storyboard>
+                                    </VisualState>
+                                    <VisualState x:Name="Disabled">
+                                        <Storyboard>
+                                            <DoubleAnimation Duration="0" Storyboard.TargetName="HighlightBackground" To="0" Storyboard.TargetProperty="Opacity"/>
+                                            <DoubleAnimation Duration="0" Storyboard.TargetName="NormalText" To=".35" Storyboard.TargetProperty="Opacity"/>
+                                        </Storyboard>
+                                    </VisualState>
+                                </VisualStateGroup>
+                                <VisualStateGroup x:Name="SelectionStates">
+                                    <VisualStateGroup.Transitions>
+                                        <VisualTransition GeneratedDuration="0"/>
+                                    </VisualStateGroup.Transitions>
+                                    <VisualState x:Name="Unselected"/>
+                                    <VisualState x:Name="Selected">
+                                        <Storyboard>
+                                            <DoubleAnimation Duration="0" Storyboard.TargetName="SelectedBackground" To=".75" Storyboard.TargetProperty="Opacity"/>
+                                        </Storyboard>
+                                    </VisualState>
+                                </VisualStateGroup>
+                                <VisualStateGroup x:Name="CalendarButtonFocusStates">
+                                    <VisualStateGroup.Transitions>
+                                        <VisualTransition GeneratedDuration="0"/>
+                                    </VisualStateGroup.Transitions>
+                                    <VisualState x:Name="CalendarButtonFocused">
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Duration="0" Storyboard.TargetName="DayButtonFocusVisual" Storyboard.TargetProperty="Visibility">
+                                                <DiscreteObjectKeyFrame KeyTime="0">
+                                                    <DiscreteObjectKeyFrame.Value>
+                                                        <Visibility>Visible</Visibility>
+                                                    </DiscreteObjectKeyFrame.Value>
+                                                </DiscreteObjectKeyFrame>
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+                                    <VisualState x:Name="CalendarButtonUnfocused">
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Duration="0" Storyboard.TargetName="DayButtonFocusVisual" Storyboard.TargetProperty="Visibility">
+                                                <DiscreteObjectKeyFrame KeyTime="0">
+                                                    <DiscreteObjectKeyFrame.Value>
+                                                        <Visibility>Collapsed</Visibility>
+                                                    </DiscreteObjectKeyFrame.Value>
+                                                </DiscreteObjectKeyFrame>
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+                                </VisualStateGroup>
+                                <VisualStateGroup x:Name="ActiveStates">
+                                    <VisualStateGroup.Transitions>
+                                        <VisualTransition GeneratedDuration="0"/>
+                                    </VisualStateGroup.Transitions>
+                                    <VisualState x:Name="Active"/>
+                                    <VisualState x:Name="Inactive">
+                                        <Storyboard>
+                                            <ColorAnimation Duration="0" Storyboard.TargetName="NormalText" To="#FF777777" Storyboard.TargetProperty="(TextElement.Foreground).(SolidColorBrush.Color)"/>
+                                        </Storyboard>
+                                    </VisualState>
+                                </VisualStateGroup>
+                                <VisualStateGroup x:Name="DayStates">
+                                    <VisualStateGroup.Transitions>
+                                        <VisualTransition GeneratedDuration="0"/>
+                                    </VisualStateGroup.Transitions>
+                                    <VisualState x:Name="RegularDay"/>
+                                    <VisualState x:Name="Today">
+                                        <Storyboard>
+                                            <DoubleAnimation Duration="0" Storyboard.TargetName="TodayBackground" To="1" Storyboard.TargetProperty="Opacity"/>
+                                            <ColorAnimation Duration="0" Storyboard.TargetName="NormalText" To="#FFFFFFFF" Storyboard.TargetProperty="(TextElement.Foreground).(SolidColorBrush.Color)"/>
+                                        </Storyboard>
+                                    </VisualState>
+                                </VisualStateGroup>
+                                <VisualStateGroup x:Name="BlackoutDayStates">
+                                    <VisualStateGroup.Transitions>
+                                        <VisualTransition GeneratedDuration="0"/>
+                                    </VisualStateGroup.Transitions>
+                                    <VisualState x:Name="NormalDay"/>
+                                    <VisualState x:Name="BlackoutDay">
+                                        <Storyboard>
+                                            <DoubleAnimation Duration="0" Storyboard.TargetName="Blackout" To=".2" Storyboard.TargetProperty="Opacity"/>
+                                        </Storyboard>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                            <Rectangle x:Name="TodayBackground" Fill="#FFAAAAAA" Opacity="0" RadiusX="1" RadiusY="1"/>
+                            <Rectangle x:Name="SelectedBackground" Fill="#FFBADDE9" Opacity="0" RadiusX="1" RadiusY="1"/>
+                            <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"/>
+                            <Rectangle x:Name="HighlightBackground" Fill="#FFBADDE9" Opacity="0" RadiusX="1" RadiusY="1"/>
+                            <ContentPresenter x:Name="NormalText" TextElement.Foreground="#FF333333" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="5,1,5,1" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                            <Path x:Name="Blackout" Data="M8.1772461,11.029181 L10.433105,11.029181 L11.700684,12.801641 L12.973633,11.029181 L15.191895,11.029181 L12.844727,13.999395 L15.21875,17.060919 L12.962891,17.060919 L11.673828,15.256231 L10.352539,17.060919 L8.1396484,17.060919 L10.519043,14.042364 z" Fill="#FF000000" HorizontalAlignment="Stretch" Margin="3" Opacity="0" RenderTransformOrigin="0.5,0.5" Stretch="Fill" VerticalAlignment="Stretch"/>
+                            <Rectangle x:Name="DayButtonFocusVisual" IsHitTestVisible="false" RadiusX="1" RadiusY="1" Stroke="#FF45D6FA" Visibility="Collapsed"/>
+                            <Rectangle x:Name="HaveHistoryBackground" IsHitTestVisible="False" Fill="Red" Opacity="0.5"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <DataTrigger Binding="{Binding Converter={StaticResource calendarConverter}}"  Value="{x:Null}">
+                                <Setter TargetName="HaveHistoryBackground" Property="Visibility" Value="Hidden" />
+                            </DataTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -30,13 +180,13 @@
                         <RowDefinition Height="335"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <Button x:Name="btnStart" Content="Старт" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Click="btnStart_Click" Height="20" Width="114"/>
+                    <Button x:Name="btnStart" Content="Старт" HorizontalAlignment="Left" Margin="10,16,0,0" VerticalAlignment="Top" Click="btnStart_Click" Height="20" Width="114"/>
                     <DataGrid x:Name="betDataGrid" AutoGenerateColumns="False"
                   IsSynchronizedWithCurrentItem="True"
                   EnableRowVirtualization="True"
                   EnableColumnVirtualization="True"
                   RowDetailsVisibilityMode="VisibleWhenSelected"
-                  ItemsSource="{Binding Source={StaticResource BetsViewSource}}" RenderTransformOrigin="0.5,0.5" VerticalAlignment="Top" Height="263" VerticalContentAlignment="Top" Margin="10,50,10,0">
+                  ItemsSource="{Binding Source={StaticResource BetsViewSource}}" RenderTransformOrigin="0.5,0.5" VerticalAlignment="Top" Height="260" VerticalContentAlignment="Top" Margin="10,53,10,0">
                         <DataGrid.Columns>
                             <DataGridTextColumn Binding="{Binding Id}"
                                     Header="Id" Width="SizeToHeader"
@@ -90,7 +240,7 @@
                                     IsReadOnly="True"/>
                         </DataGrid.Columns>
                     </DataGrid>
-                    <Button Content="Остановить" HorizontalAlignment="Left" Margin="138,10,0,0" VerticalAlignment="Top" Click="Button_Click"/>
+                    <Button Content="Остановить" HorizontalAlignment="Left" Margin="138,16,0,0" VerticalAlignment="Top" Click="Button_Click"/>
                 </Grid>
             </TabItem>
             <TabItem Header="Статистика">
@@ -124,25 +274,30 @@
                     <Label x:Name="Win_Favorits" Content="0" HorizontalAlignment="Left" Margin="140,92,0,0" VerticalAlignment="Top"/>
                 </Grid>
             </TabItem>
-            <TabItem Header="Симуляция">
+            <TabItem Header="Симуляция" Height="20" VerticalAlignment="Bottom">
                 <Grid Background="#FFE5E5E5" Margin="0,10,10,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <Button x:Name="Simulate" Content="Simulate" HorizontalAlignment="Right" Margin="0,10,10,0" VerticalAlignment="Top" Width="87" Click="Simulate_Click"/>
                     <Label Content="Стартовый капитал:" Margin="0,36,143,0" HorizontalContentAlignment="Right" VerticalContentAlignment="Stretch" VerticalAlignment="Top" HorizontalAlignment="Right"/>
-                    <TextBox HorizontalAlignment="Right" Margin="0,40,10,0" TextWrapping="Wrap" Text="1000" VerticalAlignment="Top" Width="120"/>
+                    <TextBox x:Name="tb_Sum" HorizontalAlignment="Right" Margin="0,40,10,0" TextWrapping="Wrap" Text="1000" VerticalAlignment="Top" Width="120"/>
                     <Label Content="Сумма за каждую ставку:" Margin="0,59,144,0" HorizontalContentAlignment="Right" VerticalContentAlignment="Stretch" HorizontalAlignment="Right" VerticalAlignment="Top"/>
-                    <TextBox HorizontalAlignment="Right" Margin="0,63,10,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="120"/>
+                    <TextBox x:Name="tb_Debt" HorizontalAlignment="Right" Margin="0,63,10,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="120"/>
                     <Label Content="* Укажите 0, что бы расчет был 5% от суммы" Margin="0,78,10,0" FontSize="9" HorizontalAlignment="Right" VerticalAlignment="Top"/>
-                    <TextBox x:Name="Simulate_TextBox" Margin="11,123,10,30" TextWrapping="Wrap" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible"/>
+                    <Button x:Name="Simulate_FindOptimalSettings" Content="Поиск оптимальных значений коэф." HorizontalAlignment="Left" Margin="200,91,0,0" VerticalAlignment="Top" Click="Simulate_FindOptimalSettings_Click">
+                        <Button.ToolTip>
+                            <ToolTip Content="Выберите значение Мин и Макс коэффициента савки, а так же хотите ли вы делать cтавки только на выигрывающую комнду (ведущую счет), что бы бот расчитал все возможные варианты."/>
+                        </Button.ToolTip>
+                    </Button>
+                    <TextBox x:Name="Simulate_TextBox" Margin="11,123,10,30" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" IsReadOnly="True" VirtualizingPanel.IsVirtualizing="True" TextWrapping="Wrap"/>
                     <Label Content="Мин. коэффициент ставки:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0"/>
                     <TextBox x:Name="tb_SimulateRandomMinRatio" Text="0" TextWrapping="Wrap" VerticalContentAlignment="Stretch"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="178,14,0,0" Width="120"/>
                     <Label Content="Макс. коэффициент ставки:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,40,0,0"/>
                     <TextBox x:Name="tb_SimulateRandomMaxRatio" Text="99" TextWrapping="Wrap" VerticalContentAlignment="Stretch"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="178,44,0,0" Width="120"/>
                     <CheckBox x:Name="cb_SimulateOptionalToWinner" Content="Ставить только на выигрывающую команду" Margin="10,69,0,0" HorizontalAlignment="Left" VerticalAlignment="Top">
                         <CheckBox.ToolTip>
-                            <ToolTip Content="Ставка будет проходить на побеждающего по очкам."/>
+                            <ToolTip Content="Ставка будет проходить на побеждающего по очкам команду."/>
                         </CheckBox.ToolTip>
                     </CheckBox>
                     <CheckBox x:Name="cb_SimulateOptionalIsOn" Content="Произвольный расчет ставок" Margin="10,93,0,0" HorizontalAlignment="Left" VerticalAlignment="Top">
@@ -151,6 +306,7 @@
                         </CheckBox.ToolTip>
                     </CheckBox>
                     <Button Content="Очистить" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,10,5" Width="87" Click="btn_ClearSimulate"/>
+                    <Calendar x:Name="dt_Choise" Height="30" CalendarDayButtonStyle="{DynamicResource Calendar.CalendarDayButtonStyle}" Style="{StaticResource DefaultCalendar}" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="317,9,0,0" SelectionMode="SingleRange" SelectedDatesChanged="dt_Choise_SelectedDatesChanged"/>
                 </Grid>
             </TabItem>
             <TabItem Header="Настройки">
@@ -166,7 +322,15 @@
                     <Label Content="Руб." Margin="112,104,586,340" Visibility="Visible" FontWeight="Normal" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                     <Button Content="Сохранить настройки" HorizontalAlignment="Left" Margin="15,176,0,0" VerticalAlignment="Top" Width="225"/>
                     <CheckBox x:Name="BetIsDisabled" IsChecked="{Binding Path=Settings.BetIsDisabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="Отключить ставки" HorizontalAlignment="Left" Margin="20,144,0,0" VerticalAlignment="Top" Width="220"/>
-
+                    <Label Content="Мин. коэффициент ставки:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="271,16,0,0"/>
+                    <TextBox x:Name="tb_MinRatio" Text="{Binding Settings.MinRatio, Source={StaticResource ViewModel}}" TextWrapping="Wrap" VerticalContentAlignment="Stretch"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="439,20,0,0" Width="120" TextChanged="SettingsChanged"/>
+                    <Label Content="Макс. коэффициент ставки:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="271,46,0,0"/>
+                    <TextBox x:Name="tb_MaxRatio" Text="{Binding Settings.MaxRatio, Source={StaticResource ViewModel}}" TextWrapping="Wrap" VerticalContentAlignment="Stretch"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="439,50,0,0" Width="120" TextChanged="SettingsChanged"/>
+                    <CheckBox x:Name="cb_OptionalToWinner" IsChecked="{Binding Settings.BetToWinner, Mode=TwoWay, Source={StaticResource ViewModel}}" Content="Ставить только на выигрывающую команду" Margin="276,80,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Checked="cb_CheckChange" Unchecked="cb_CheckChange">
+                        <CheckBox.ToolTip>
+                            <ToolTip Content="Ставка будет проходить на побеждающего по очкам команду."/>
+                        </CheckBox.ToolTip>
+                    </CheckBox>
                 </Grid>
             </TabItem>
         </TabControl>
@@ -175,6 +339,5 @@
                 <TextBlock Text="{Binding Path=UserInformation.Balance, StringFormat='Текущий баланс: {0} руб.'}"/>
             </StatusBarItem>
         </StatusBar>
-
     </Grid>
 </Window>

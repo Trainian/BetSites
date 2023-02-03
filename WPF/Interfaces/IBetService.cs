@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 
 namespace WPF.Interfaces
 {
@@ -17,5 +18,8 @@ namespace WPF.Interfaces
         Task<IEnumerable<Bet>?> GetAllBetAsync();
         Task<IEnumerable<Bet>> GetAllBetsWithTheEnd();
         Task<IEnumerable<Bet>> GetAllBetsWithDebtAndWithTheEnd();
+        Task<IEnumerable<Bet>> GetBetsWithTheEndByDate(DateTime startDate, DateTime endDate);
+        Task<IEnumerable<Bet>> GetBetsWithDebtAndWithTheEndByDate(DateTime startDate, DateTime endDate);
+        Task<IReadOnlyList<DateTime>> GetEnabledDatesPickBets();
     }
 }

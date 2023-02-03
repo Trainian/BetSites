@@ -10,6 +10,6 @@ namespace WPF.Parsers.Base
 {
     public abstract class BetDebt
     {
-        public abstract Task<bool> CheckAndDebt(IWebElement webElement, Bet bet);
+        public abstract Task<bool> CheckAndDebt(IWebElement webElement, Bet bet, decimal minRation, decimal maxRatio, bool debtToWinner);
     }
 }

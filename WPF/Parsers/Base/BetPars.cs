@@ -12,7 +12,7 @@ namespace WPF.Parsers.Base
 {
     public abstract class BetPars
     {
-        public abstract Task<ICollection<Bet>> ParsSite(IWebDriver driver, bool betIsDisabled);
+        public abstract Task<ICollection<Bet>> ParsSite(IWebDriver driver, decimal minRation, decimal maxRatio, bool debtToWinner, bool betIsDisabled);
         public virtual void Scroll(IWebDriver driver, int currentScroll, int setScrolls)
         {
             var heightScroll = 0;

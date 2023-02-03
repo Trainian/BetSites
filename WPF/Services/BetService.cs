@@ -8,6 +8,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 using WPF.Interfaces;
 
 namespace WPF.Services
@@ -136,6 +137,37 @@ namespace WPF.Services
                 entityNew.RatioSecond == entityDb.RatioSecond &&
                 entityNew.RatioThird == entityDb.RatioThird &&
                 entityNew.Score == entityDb.Score;
+        }
+
+        public async Task<IEnumerable<Bet>> GetBetsWithTheEndByDate(DateTime startDate, DateTime endDate)
+        {
+            endDate = endDate.AddDays(1);
+            var bets = await GetAllBetsWithTheEnd();
+            var betsByDate = bets.Where(b => b.CreateDate >= startDate && b.CreateDate < endDate);
+            return betsByDate;
+        }
+
+        public async Task<IEnumerable<Bet>> GetBetsWithDebtAndWithTheEndByDate(DateTime startDate, DateTime endDate)
+        {
+            endDate = endDate.AddDays(1);
+            var bets = await GetAllBetsWithDebtAndWithTheEnd();
+            var betsByDate = bets.Where(b => b.CreateDate >= startDate && b.CreateDate < endDate);
+            return betsByDate;
+        }
+
+        public async Task<IReadOnlyList<DateTime>> GetEnabledDatesPickBets()
+        {
+            var result = new List<DateTime>();
+            var bets = await _betRepository.GetAllAsync();
+            var betsDates = bets.Select(b => b.CreateDate).ToList();
+            foreach(var betsDate in betsDates)
+            {
+                var year = betsDate.Year;
+                var monuth = betsDate.Month;
+                var day = betsDate.Day;
+                result.Add(new DateTime(year, monuth, day));
+            }
+            return result.Distinct().ToList();
         }
     }
 }

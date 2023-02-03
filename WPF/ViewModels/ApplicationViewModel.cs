@@ -10,25 +10,25 @@ namespace WPF.ViewModels
 {
     public class ApplicationViewModel : INotifyPropertyChanged
     {
-        private string name;
-        private string auxiliaryLocator;
+        private string _name;
+        private string _auxiliaryLocator;
         private DateTime createDate;
 
         public string Name { 
-            get { return name; } 
+            get { return _name; } 
             set
             {
-                name = value;
+                _name = value;
                 OnPropertyChanged("Name");
             } 
         }
 
         public string AuxiliaryLocator
         {
-            get { return name; }
+            get { return _name; }
             set
             {
-                auxiliaryLocator = value;
+                _auxiliaryLocator = value;
                 OnPropertyChanged("AuxiliaryLocator");
             }
         }

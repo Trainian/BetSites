@@ -6,9 +6,9 @@ namespace ApplicationCore.Models
     public class Coefficient : BaseObject
     {
         public DateTime Time { get; set; }
-        public double RatioFirst { get; set; }
-        public double RatioSecond { get; set; }
-        public double RatioThird { get; set; }
+        public decimal RatioFirst { get; set; }
+        public decimal RatioSecond { get; set; }
+        public decimal RatioThird { get; set; }
         public TimeSpan BetTime { get; set; }
         public string Score { get; set; } = "0:0";
         public bool IsMadeBet { get; set; }

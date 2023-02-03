@@ -68,9 +68,9 @@ namespace Infrastructure.Data
                 {
                     Id = 1,
                     BetId = 1,
-                    RatioFirst = 1.0,
-                    RatioSecond = 2.1,
-                    RatioThird = 3.2,
+                    RatioFirst = 1.0M,
+                    RatioSecond = 2.1M,
+                    RatioThird = 3.2M,
                     BetTime = TimeSpan.FromMinutes(1),
                     Score = "0 - 0",
                     Time = DateTime.Now - new TimeSpan(0,10,30)
@@ -79,9 +79,9 @@ namespace Infrastructure.Data
                 {
                     Id = 2,
                     BetId = 1,
-                    RatioFirst = 0.8,
-                    RatioSecond = 2.1,
-                    RatioThird = 3.5,
+                    RatioFirst = 0.8M,
+                    RatioSecond = 2.1M,
+                    RatioThird = 3.5M,
                     BetTime = TimeSpan.FromMinutes(10),
                     Score = "0 - 1",
                     Time = DateTime.Now
